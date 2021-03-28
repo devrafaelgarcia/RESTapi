@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Primeiro.ApiWeb.Data.Contract.VO;
+using Primeiro.ApiWeb.HyperMediaLink.Filtros;
 using Primeiro.ApiWeb.Models;
 using Primeiro.ApiWeb.Services;
 using Primeiro.ApiWeb.Services.Interface;
@@ -11,8 +14,10 @@ using System.Threading.Tasks;
 namespace Primeiro.ApiWeb.Controllers
 {
 
+    [ApiVersion("1")]
     [ApiController]
-    [Route("api/[controller]")]
+    [Authorize("Bearer")]
+    [Route("api/[controller]/v{version:apiVersion}")]
     public class PersonController : ControllerBase
     {
 
@@ -31,21 +36,35 @@ namespace Primeiro.ApiWeb.Controllers
         //Get para o Find all
 
         [HttpGet]
+        [ProducesResponseType((200), Type = typeof(List<PersonVO>))]
+        [ProducesResponseType((204))]
+        [ProducesResponseType((400))]
+        [ProducesResponseType((401))]
+        [TypeFilter(typeof(HypermediaFilter))]
         public IActionResult Get()
         {
             return Ok(_personService.FindAll()); 
         }
 
         [HttpGet("{id}")]
+        [ProducesResponseType((200), Type = typeof(PersonVO))]
+        [ProducesResponseType((204))]
+        [ProducesResponseType((400))]
+        [ProducesResponseType((401))]
+        [TypeFilter(typeof(HypermediaFilter))]
         public IActionResult Get(long id)
         {
-            Person person = _personService.FindById(id);
+            PersonVO person = _personService.FindById(id);
             if (person == null) return NotFound();
             return Ok(person);
         }
 
         [HttpPost]
-        public IActionResult Post([FromBody] Person person)
+        [ProducesResponseType((200), Type = typeof(PersonVO))]
+        [ProducesResponseType((400))]
+        [ProducesResponseType((401))]
+        [TypeFilter(typeof(HypermediaFilter))]
+        public IActionResult Post([FromBody] PersonVO person)
         {
            
             if (person == null) return BadRequest();
@@ -53,7 +72,11 @@ namespace Primeiro.ApiWeb.Controllers
         }
 
         [HttpPut]
-        public IActionResult Put([FromBody] Person person)
+        [ProducesResponseType((200), Type = typeof(PersonVO))]
+        [ProducesResponseType((400))]
+        [ProducesResponseType((401))]
+        [TypeFilter(typeof(HypermediaFilter))]
+        public IActionResult Put([FromBody] PersonVO person)
         {
 
             if (person == null) return BadRequest();
@@ -61,6 +84,9 @@ namespace Primeiro.ApiWeb.Controllers
         }
 
         [HttpDelete("{id}")]
+        [ProducesResponseType((204))]
+        [ProducesResponseType((400))]
+        [ProducesResponseType((401))]
         public IActionResult Delete(long id)
         {
             _personService.Delete(id);

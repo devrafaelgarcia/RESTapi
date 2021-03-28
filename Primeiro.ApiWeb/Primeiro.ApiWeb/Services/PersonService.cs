@@ -1,71 +1,58 @@
-﻿using Primeiro.ApiWeb.Models;
+﻿using Primeiro.ApiWeb.Data.Contract.VO;
+using Primeiro.ApiWeb.Data.Implementations;
+using Primeiro.ApiWeb.Models;
 using Primeiro.ApiWeb.Services.Interface;
-using System;
+using Primeiro.ApiWeb.Services.Repository.Generic;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Primeiro.ApiWeb.Services
 {
     public class PersonService : IPersonService
     {
-        private volatile int count;
+        private readonly IRepository<Person> _repository;
 
-        public Person Create(Person person)
+        private readonly PersonConverter _converter;
+     
+        public PersonService(IRepository<Person> repository)
         {
-            return person;
+            _repository = repository;
+            _converter = new PersonConverter();
+        }
+
+        public PersonVO Create(PersonVO person)
+        {
+            //Quando ele chega ele é um VO, não da para persistir na base da dados
+            var personEntity = _converter.Parse(person);
+            //Converto ele em um Person dnv
+            personEntity = _repository.Create(personEntity);
+            //Criamos o create
+            return _converter.Parse(personEntity); //E basicamente voltamos ele para VO
         }
 
         public void Delete(long id)
         {
-            
+            _repository.Delete(id);
         }
 
-        public List<Person> FindAll()
+        public List<PersonVO> FindAll()
         {
-           ;
-            List<Person> persons = new List<Person>();
-            for(int i = 0; i < 10; i++)
-            {
-                Person p = MockPerson(i);
-                persons.Add(p);
-            }
-            return persons;
+            return _converter.Parse(_repository.FindAll());
+        }
+        public PersonVO FindById(long id)
+        {
+            return _converter.Parse(_repository.FindById(id));
+
         }
 
-        public Person FindById(long id)
+        public PersonVO Update(PersonVO person)
         {
-            return new Person() {
-            Id = 1, 
-            FirstName = "Rafael",
-            LastName = "Garcia",
-            Andress = "Uberlandia, MG, Brazil",
-            Gender = "Male"
-            };
-        }
-
-        public Person Update(Person person)
-        {
-            return person;
+            var personEntity = _converter.Parse(person);
+            personEntity = _repository.Update(personEntity);
+            return _converter.Parse(personEntity);
         }
 
 
-        private Person MockPerson(int i)
-        {
-            return new Person()
-            {
-            Id = IncrementAndGet(), 
-            FirstName = "Person Name" + i,
-            LastName = "Last Name" + i,
-            Andress = "Some Andress" + i,
-            Gender = i % 2 == 0 ? "Male" : "Female"
-            }; 
     }
 
-        private long IncrementAndGet()
-        {
-           return Interlocked.Increment(ref count);
-        }
-    }
+
 }
